@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    @apply font-sans bg-gray-950 text-white antialiased;
+    background: radial-gradient(ellipse at top, #0f172a 0%, #020617 60%);
+    min-height: 100vh;
+  }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { @apply bg-gray-900; }
+  ::-webkit-scrollbar-thumb { @apply bg-blue-600 rounded-full; }
+}
+
+@layer components {
+  /* Cards */
+  .glass-card {
+    @apply bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl transition-all duration-300;
+  }
+  .glass-card:hover {
+    @apply border-blue-500/30 shadow-xl shadow-blue-900/20;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    @apply inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-500
+           hover:from-blue-500 hover:to-indigo-500 text-white font-semibold
+           py-2.5 px-6 rounded-xl transition-all duration-200
+           shadow-lg hover:shadow-blue-500/30 hover:scale-105 active:scale-95
+           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 bg-white/8 hover:bg-white/15 text-white
+           font-semibold py-2.5 px-6 rounded-xl transition-all duration-200
+           border border-white/15 hover:border-white/30;
+  }
+  .btn-danger {
+    @apply inline-flex items-center gap-2 bg-red-500/20 hover:bg-red-500/30 text-red-400
+           font-semibold py-2.5 px-6 rounded-xl transition-all duration-200
+           border border-red-500/30;
+  }
+
+  /* Inputs */
+  .input-field {
+    @apply w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3
+           text-white placeholder-gray-500 focus:outline-none
+           focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50
+           transition-all duration-200;
+  }
+  .input-label {
+    @apply block text-sm font-medium text-gray-300 mb-1.5;
+  }
+
+  /* Sentiment badges */
+  .badge-positive {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold
+           bg-emerald-500/15 text-emerald-400 border border-emerald-500/25;
+  }
+  .badge-neutral {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold
+           bg-amber-500/15 text-amber-400 border border-amber-500/25;
+  }
+  .badge-negative {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold
+           bg-red-500/15 text-red-400 border border-red-500/25;
+  }
+
+  /* Section */
+  .section-heading {
+    @apply text-2xl font-bold text-white mb-6;
+  }
+  .page-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+  }
+
+  /* Loading spinner */
+  .spinner {
+    @apply animate-spin rounded-full border-2 border-white/20 border-t-blue-500;
+  }
+
+  /* Stat card */
+  .stat-card {
+    @apply glass-card p-6 flex flex-col gap-1;
+  }
+}

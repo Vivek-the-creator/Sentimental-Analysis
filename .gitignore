@@ -1,0 +1,101 @@
+# ==============================
+# 🐍 Python / Backend
+# ==============================
+
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.env
+.env.*
+*.log
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# FastAPI / Uvicorn
+*.sqlite3
+*.db
+
+# Model files (VERY IMPORTANT - large files)
+models/
+*.pt
+*.bin
+*.h5
+*.ckpt
+
+# ==============================
+# 🌐 Frontend (React + Vite)
+# ==============================
+
+node_modules/
+dist/
+build/
+.vite/
+*.log
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# ==============================
+# 🧠 AI / ML specific
+# ==============================
+
+# HuggingFace cache
+.cache/
+huggingface/
+transformers/
+
+# Jupyter notebooks (if used)
+.ipynb_checkpoints/
+
+# ==============================
+# 🗄️ Database / Local configs
+# ==============================
+
+*.sql
+*.dump
+*.bak
+
+# ==============================
+# 💻 OS / Editor files
+# ==============================
+
+# VS Code
+.vscode/
+
+# PyCharm / IntelliJ
+.idea/
+
+# Mac
+.DS_Store
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# ==============================
+# 🔐 Secrets (CRITICAL)
+# ==============================
+
+backend/.env
+frontend/.env
+
+# ==============================
+# 🚀 Misc
+# ==============================
+
+coverage/
+htmlcov/
+*.cover
+*.tmp
