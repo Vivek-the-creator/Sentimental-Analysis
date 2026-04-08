@@ -14,6 +14,8 @@ function CommentSection({ postId }) {
   const [page,      setPage]      = useState(1)
   const [pages,     setPages]     = useState(1)
   const [error,     setError]     = useState('')
+  const [editingId, setEditingId] = useState(null)
+  const [editText,  setEditText]  = useState('')
 
   const fetchComments = useCallback(async () => {
     setLoading(true)
@@ -42,6 +44,42 @@ function CommentSection({ postId }) {
       setError(err.response?.data?.detail || 'Failed to post comment')
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  const handleEdit = (comment) => {
+    setEditingId(comment.comment_id)
+    setEditText(comment.comment_text)
+  }
+
+  const handleCancelEdit = () => {
+    setEditingId(null)
+    setEditText('')
+  }
+
+  const handleSaveEdit = async (commentId) => {
+    if (!editText.trim()) return
+    try {
+      const res = await commentsAPI.update(commentId, { comment_text: editText.trim() })
+      setComments(comments.map(c => 
+        c.comment_id === commentId 
+          ? { ...c, comment_text: res.data.comment_text, sentiment: res.data.sentiment }
+          : c
+      ))
+      setEditingId(null)
+      setEditText('')
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Failed to update comment')
+    }
+  }
+
+  const handleDelete = async (commentId) => {
+    if (!confirm('Delete this comment?')) return
+    try {
+      await commentsAPI.delete(commentId)
+      setComments(comments.filter(c => c.comment_id !== commentId))
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Failed to delete comment')
     }
   }
 
@@ -114,9 +152,58 @@ function CommentSection({ postId }) {
                     <p className="text-xs text-gray-500">{timeAgo(c.created_at)}</p>
                   </div>
                 </div>
-                <SentimentBadge sentiment={c.sentiment} />
+                <div className="flex items-center gap-2">
+                  <SentimentBadge sentiment={c.sentiment} />
+                  {user && user.user_id === c.user_id && (
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => handleEdit(c)}
+                        className="p-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 transition-colors"
+                        title="Edit"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => handleDelete(c.comment_id)}
+                        className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors"
+                        title="Delete"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
-              <p className="mt-3 text-sm text-gray-300 leading-relaxed pl-10">{c.comment_text}</p>
+              {editingId === c.comment_id ? (
+                <div className="mt-3 pl-10 space-y-2">
+                  <textarea
+                    value={editText}
+                    onChange={(e) => setEditText(e.target.value)}
+                    rows={3}
+                    className="input-field resize-none text-sm w-full"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleSaveEdit(c.comment_id)}
+                      className="btn-primary text-xs py-1.5 px-4"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={handleCancelEdit}
+                      className="btn-secondary text-xs py-1.5 px-4"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p className="mt-3 text-sm text-gray-300 leading-relaxed pl-10">{c.comment_text}</p>
+              )}
             </div>
           ))}
         </div>

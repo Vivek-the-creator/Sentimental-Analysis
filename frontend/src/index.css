@@ -76,6 +76,11 @@
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
   }
 
+  /* Select dropdown */
+  select.input-field option {
+    @apply bg-gray-900 text-white;
+  }
+
   /* Loading spinner */
   .spinner {
     @apply animate-spin rounded-full border-2 border-white/20 border-t-blue-500;

@@ -43,6 +43,8 @@ export const postsAPI = {
 export const commentsAPI = {
   getByPost: (postId, page = 1) => api.get(`/api/comments/${postId}?page=${page}&limit=20`),
   create:    (data)             => api.post('/api/comments', data),
+  update:    (id, data)         => api.put(`/api/comments/${id}`, data),
+  delete:    (id)               => api.delete(`/api/comments/${id}`),
 }
 
 export const likesAPI = {

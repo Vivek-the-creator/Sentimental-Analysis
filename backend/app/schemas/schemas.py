@@ -76,6 +76,10 @@ class CommentCreate(BaseModel):
     comment_text: str
 
 
+class CommentUpdate(BaseModel):
+    comment_text: str
+
+
 class CommentResponse(BaseModel):
     comment_id: int
     post_id: int
