@@ -2,12 +2,12 @@ import React, { useState } from 'react'
 
 const SENTIMENT_COLORS = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ec4899', '#06b6d4', '#84cc16']
 
-function WordCloudChart({ words = [] }) {
+function WordCloudChart({ words = [], printMode = false }) {
   const [tooltip, setTooltip] = useState(null)
 
   if (!words || words.length === 0) {
     return (
-      <div className="flex items-center justify-center h-48 text-gray-500 text-sm">
+      <div className={`flex items-center justify-center h-48 text-sm ${printMode ? 'text-gray-400' : 'text-gray-500'}`}>
         No words to display yet
       </div>
     )
@@ -19,7 +19,23 @@ function WordCloudChart({ words = [] }) {
 
   const fontSize = (val) => {
     const ratio = (val - minVal) / range
-    return Math.round(12 + ratio * 28) // 12px to 40px
+    return Math.round(12 + ratio * 28)
+  }
+
+  if (printMode) {
+    return (
+      <div className="flex flex-wrap gap-3 items-center justify-center p-4 min-h-48">
+        {words.map((w, i) => (
+          <span
+            key={w.text}
+            className="font-semibold"
+            style={{ fontSize: `${fontSize(w.value)}px`, color: SENTIMENT_COLORS[i % SENTIMENT_COLORS.length] }}
+          >
+            {w.text}
+          </span>
+        ))}
+      </div>
+    )
   }
 
   return (

@@ -32,12 +32,25 @@ function PostAnalytics() {
   const handleDownloadPDF = async () => {
     setDownloading(true)
     try {
-      const canvas = await html2canvas(reportRef.current, {
+      const el = reportRef.current
+      el.classList.remove('hidden')
+      el.style.position = 'absolute'
+      el.style.left = '-9999px'
+      el.style.top = '0'
+      el.style.width = '900px'
+      await new Promise((r) => setTimeout(r, 300))
+      const canvas = await html2canvas(el, {
         scale: 2,
-        backgroundColor: '#020617',
+        backgroundColor: '#ffffff',
         useCORS: true,
         logging: false,
+        width: 900,
       })
+      el.classList.add('hidden')
+      el.style.position = ''
+      el.style.left = ''
+      el.style.top = ''
+      el.style.width = ''
       const imgData = canvas.toDataURL('image/png')
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
       const pageW = pdf.internal.pageSize.getWidth()
@@ -127,8 +140,6 @@ function PostAnalytics() {
         </button>
       </div>
 
-      <div ref={reportRef}>
-
       <div className="mb-8">
         <span className="text-xs font-semibold text-blue-400 uppercase tracking-wide">Analytics Report</span>
         <h1 className="text-2xl font-extrabold text-white mt-1 line-clamp-2">{post?.title}</h1>
@@ -171,6 +182,95 @@ function PostAnalytics() {
         <p className="text-xs text-gray-600 mb-4">Click any word to see its frequency in comments</p>
         <WordCloudChart words={words} />
       </div>
+
+      <div ref={reportRef} className="hidden">
+        <div className="bg-white p-8 space-y-8">
+          <div className="text-center border-b-2 border-gray-300 pb-4">
+            <h1 className="text-3xl font-bold text-gray-900">Analytics Report</h1>
+            <h2 className="text-xl text-gray-700 mt-2">{post?.title}</h2>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 mb-3">Sentiment Distribution (Pie Chart)</h3>
+            <div className="bg-white">
+              <SentimentPieChart data={analytics?.sentiment} printMode />
+            </div>
+            <div className="mt-3 text-gray-800 space-y-1">
+              <p>• Positive: {analytics?.sentiment?.positive || 0}</p>
+              <p>• Neutral: {analytics?.sentiment?.neutral || 0}</p>
+              <p>• Negative: {analytics?.sentiment?.negative || 0}</p>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 mb-3">Sentiment Count (Bar Chart)</h3>
+            <div className="bg-white">
+              <SentimentBarChart data={analytics?.sentiment} printMode />
+            </div>
+            <div className="mt-3 text-gray-800 space-y-1">
+              <p>• Positive: {analytics?.sentiment?.positive || 0}</p>
+              <p>• Neutral: {analytics?.sentiment?.neutral || 0}</p>
+              <p>• Negative: {analytics?.sentiment?.negative || 0}</p>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 mb-3">Comment Trend Over Time</h3>
+            <div className="bg-white">
+              <SentimentTrendChart data={analytics?.comment_trend} printMode />
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 mb-3">Gender Analysis (Radar Chart)</h3>
+            <div className="bg-white">
+              <GenderAnalysis data={analytics?.gender} printMode />
+            </div>
+            <div className="mt-3 text-gray-800 space-y-1">
+              <p className="font-semibold">Male:</p>
+              <p className="ml-4">• Positive: {analytics?.gender?.male_positive || 0}</p>
+              <p className="ml-4">• Neutral: {analytics?.gender?.male_neutral || 0}</p>
+              <p className="ml-4">• Negative: {analytics?.gender?.male_negative || 0}</p>
+              <p className="font-semibold mt-2">Female:</p>
+              <p className="ml-4">• Positive: {analytics?.gender?.female_positive || 0}</p>
+              <p className="ml-4">• Neutral: {analytics?.gender?.female_neutral || 0}</p>
+              <p className="ml-4">• Negative: {analytics?.gender?.female_negative || 0}</p>
+              <p className="font-semibold mt-2">Other:</p>
+              <p className="ml-4">• Positive: {analytics?.gender?.other_positive || 0}</p>
+              <p className="ml-4">• Neutral: {analytics?.gender?.other_neutral || 0}</p>
+              <p className="ml-4">• Negative: {analytics?.gender?.other_negative || 0}</p>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 mb-3">Age Group Analysis (Treemap)</h3>
+            <div className="bg-white">
+              <AgeGroupAnalysis data={analytics?.age_groups} printMode />
+            </div>
+            <div className="mt-3 text-gray-800 space-y-1">
+              {[['18-25', '18_25'], ['26-40', '26_40'], ['40+', '40_plus'], ['Unknown', 'unknown']].map(([label, key]) => (
+                <div key={key}>
+                  <p className="font-semibold">{label}:</p>
+                  <p className="ml-4">• Positive: {analytics?.age_groups?.[key]?.Positive || 0}</p>
+                  <p className="ml-4">• Neutral: {analytics?.age_groups?.[key]?.Neutral || 0}</p>
+                  <p className="ml-4">• Negative: {analytics?.age_groups?.[key]?.Negative || 0}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 mb-3">Word Cloud</h3>
+            <div className="bg-white">
+              <WordCloudChart words={words} printMode />
+            </div>
+            <div className="mt-3 text-gray-800 space-y-1">
+              {words.slice(0, 10).map((w) => (
+                <p key={w.text}>• {w.text}: {w.value}</p>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </main>
   )

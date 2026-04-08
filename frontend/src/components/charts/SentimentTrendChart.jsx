@@ -19,7 +19,7 @@ function formatFullDate(value) {
   return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-function SentimentTrendChart({ data }) {
+function SentimentTrendChart({ data, printMode = false }) {
   const chartData = (data || []).map((entry) => ({
     ...entry,
     label: formatTick(entry.date),
@@ -29,19 +29,25 @@ function SentimentTrendChart({ data }) {
     return <div className="flex items-center justify-center h-72 text-gray-500 text-sm">No comment trend data yet</div>
   }
 
+  const tickColor = printMode ? '#374151' : '#9ca3af'
+  const gridColor = printMode ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.05)'
+  const tooltipStyle = printMode
+    ? { background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', color: '#111' }
+    : { background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff' }
+
   return (
     <ResponsiveContainer width="100%" height={300}>
       <LineChart data={chartData} margin={{ top: 8, right: 18, left: -20, bottom: 6 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-        <XAxis dataKey="label" tick={{ fill: '#9ca3af', fontSize: 12 }} axisLine={false} tickLine={false} />
-        <YAxis tick={{ fill: '#9ca3af', fontSize: 12 }} axisLine={false} tickLine={false} allowDecimals={false} />
+        <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+        <XAxis dataKey="label" tick={{ fill: tickColor, fontSize: 12 }} axisLine={false} tickLine={false} />
+        <YAxis tick={{ fill: tickColor, fontSize: 12 }} axisLine={false} tickLine={false} allowDecimals={false} />
         <Tooltip
-          contentStyle={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff' }}
-          itemStyle={{ color: '#fff' }}
-          labelStyle={{ color: '#fff' }}
+          contentStyle={tooltipStyle}
+          itemStyle={{ color: printMode ? '#111' : '#fff' }}
+          labelStyle={{ color: printMode ? '#111' : '#fff' }}
           labelFormatter={(value, payload) => formatFullDate(payload?.[0]?.payload?.date || value)}
         />
-        <Legend formatter={(value) => <span style={{ color: '#9ca3af', fontSize: 12 }}>{value}</span>} />
+        <Legend formatter={(value) => <span style={{ color: tickColor, fontSize: 12 }}>{value}</span>} />
         <Line type="linear" dataKey="positive" name="Positive" stroke="#10b981" strokeWidth={3} dot={{ r: 3 }} activeDot={{ r: 5 }} />
         <Line type="linear" dataKey="neutral" name="Neutral" stroke="#f59e0b" strokeWidth={3} dot={{ r: 3 }} activeDot={{ r: 5 }} />
         <Line type="linear" dataKey="negative" name="Negative" stroke="#ef4444" strokeWidth={3} dot={{ r: 3 }} activeDot={{ r: 5 }} />

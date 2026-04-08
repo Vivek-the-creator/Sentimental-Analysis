@@ -58,7 +58,7 @@ function AgeTooltip({ active, payload }) {
   )
 }
 
-function AgeGroupAnalysis({ data }) {
+function AgeGroupAnalysis({ data, printMode = false }) {
   const groups = [
     ['18-25', '18_25'],
     ['26-40', '26_40'],
