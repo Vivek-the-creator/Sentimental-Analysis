@@ -24,7 +24,7 @@ function PostCard({ post }) {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-transparent to-transparent" />
         {post.beneficial_for && (
-          <span className="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-blue-600/80 text-xs font-semibold text-white backdrop-blur-sm">
+          <span className="absolute top-3 left-3 max-w-[calc(100%-1.5rem)] whitespace-pre-line px-2.5 py-1 rounded-lg bg-blue-600/80 text-xs font-semibold text-white backdrop-blur-sm line-clamp-3">
             {post.beneficial_for}
           </span>
         )}

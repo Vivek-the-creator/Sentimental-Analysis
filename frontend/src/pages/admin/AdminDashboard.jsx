@@ -108,7 +108,7 @@ function AdminDashboard() {
                     <span>{date(post.created_at)}</span>
                     <span>❤️ {post.like_count}</span>
                     <span>💬 {post.comment_count}</span>
-                    {post.beneficial_for && <span className="px-1.5 py-0.5 rounded bg-blue-600/20 text-blue-400">{post.beneficial_for}</span>}
+                    {post.beneficial_for && <span className="max-w-52 whitespace-pre-line rounded bg-blue-600/20 px-1.5 py-0.5 text-blue-400 line-clamp-2">{post.beneficial_for}</span>}
                   </div>
                 </div>
 

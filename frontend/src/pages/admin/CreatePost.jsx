@@ -1,9 +1,17 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { postsAPI } from '../../services/api'
 
+const DESCRIPTION_TOOLS = [
+  { label: 'B', title: 'Bold', type: 'wrap', prefix: '**', suffix: '**', placeholder: 'bold text', className: 'font-extrabold' },
+  { label: 'I', title: 'Italic', type: 'wrap', prefix: '_', suffix: '_', placeholder: 'italic text', className: 'italic' },
+  { label: 'U', title: 'Underline', type: 'wrap', prefix: '__', suffix: '__', placeholder: 'underlined text', className: 'underline' },
+  { label: '•', title: 'Bullet List', type: 'line-prefix', prefix: '- ' },
+]
+
 function CreatePost() {
   const navigate = useNavigate()
+  const descriptionRef = useRef(null)
   const [form, setForm] = useState({
     title: '',
     thumbnail: '',
@@ -50,6 +58,58 @@ function CreatePost() {
     }
 
     reader.readAsDataURL(file)
+  }
+
+  const applyDescriptionFormat = (tool) => {
+    const textarea = descriptionRef.current
+
+    if (!textarea) return
+
+    const value = form.detailed_description
+    const selectionStart = textarea.selectionStart ?? 0
+    const selectionEnd = textarea.selectionEnd ?? 0
+    const selectedText = value.slice(selectionStart, selectionEnd)
+
+    let nextValue = value
+    let nextSelectionStart = selectionStart
+    let nextSelectionEnd = selectionEnd
+
+    if (tool.type === 'wrap') {
+      const insertion = `${tool.prefix}${selectedText || tool.placeholder}${tool.suffix}`
+      nextValue = `${value.slice(0, selectionStart)}${insertion}${value.slice(selectionEnd)}`
+
+      if (selectedText) {
+        nextSelectionStart = selectionStart + tool.prefix.length
+        nextSelectionEnd = nextSelectionStart + selectedText.length
+      } else {
+        nextSelectionStart = selectionStart + tool.prefix.length
+        nextSelectionEnd = nextSelectionStart + tool.placeholder.length
+      }
+    }
+
+    if (tool.type === 'line-prefix') {
+      const start = value.lastIndexOf('\n', Math.max(selectionStart - 1, 0)) + 1
+      const endBreakIndex = value.indexOf('\n', selectionEnd)
+      const end = endBreakIndex === -1 ? value.length : endBreakIndex
+      const selectedBlock = value.slice(start, end)
+      const lines = selectedBlock.split('\n')
+      const prefixedLines = lines.map((line) => (line.startsWith(tool.prefix) ? line : `${tool.prefix}${line}`))
+      const insertion = prefixedLines.join('\n')
+
+      nextValue = `${value.slice(0, start)}${insertion}${value.slice(end)}`
+      nextSelectionStart = start
+      nextSelectionEnd = start + insertion.length
+    }
+
+    setForm((currentForm) => ({
+      ...currentForm,
+      detailed_description: nextValue,
+    }))
+
+    requestAnimationFrame(() => {
+      textarea.focus()
+      textarea.setSelectionRange(nextSelectionStart, nextSelectionEnd)
+    })
   }
 
   const handleSubmit = async (e) => {
@@ -150,15 +210,17 @@ function CreatePost() {
 
             <div>
               <label className="input-label">Beneficial For *</label>
-              <input
+              <textarea
                 id="post-beneficial"
                 name="beneficial_for"
                 value={form.beneficial_for}
                 onChange={handleChange}
                 required
-                placeholder="e.g. Farmers, Youth, Women, Senior Citizens"
-                className="input-field"
+                rows={4}
+                placeholder={`Examples:\n- Farmers\n- Women entrepreneurs\n- Senior citizens`}
+                className="input-field resize-y"
               />
+              <p className="text-xs text-gray-500 mt-2">Use bullet points or press Enter to move to the next line.</p>
             </div>
 
             <div>
@@ -178,6 +240,7 @@ function CreatePost() {
             <div>
               <label className="input-label">Detailed Description *</label>
               <textarea
+                ref={descriptionRef}
                 id="post-detailed-desc"
                 name="detailed_description"
                 value={form.detailed_description}
@@ -187,6 +250,20 @@ function CreatePost() {
                 placeholder="Full details of the scheme - eligibility, benefits, how to apply, etc."
                 className="input-field resize-y"
               />
+              <div className="mt-3 flex flex-wrap gap-2">
+                {DESCRIPTION_TOOLS.map((tool) => (
+                  <button
+                    key={tool.title}
+                    type="button"
+                    title={tool.title}
+                    onClick={() => applyDescriptionFormat(tool)}
+                    className={`inline-flex h-9 min-w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 px-3 text-sm text-gray-200 transition-colors hover:bg-white/10 ${tool.className || ''}`}
+                  >
+                    {tool.label}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500 mt-2">Select text, then use the tools for bold, italic, underline, or bullet points.</p>
             </div>
 
             {error && (

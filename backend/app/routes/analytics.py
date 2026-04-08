@@ -1,5 +1,5 @@
 import re
-from collections import Counter
+from collections import Counter, defaultdict
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.db.database import get_db
@@ -47,10 +47,14 @@ def get_analytics(
         "40+":   {"Positive": 0, "Neutral": 0, "Negative": 0},
         "Unknown": {"Positive": 0, "Neutral": 0, "Negative": 0},
     }
+    comment_trend = defaultdict(lambda: {"positive": 0, "neutral": 0, "negative": 0})
 
     for comment, user in rows:
         s = comment.sentiment if comment.sentiment in sentiment else "Neutral"
         sentiment[s] += 1
+
+        trend_key = (comment.created_at.date().isoformat() if comment.created_at else "Unknown")
+        comment_trend[trend_key][s.lower()] += 1
 
         g = (user.gender or "").strip().capitalize()
         if g not in gender:
@@ -85,6 +89,9 @@ def get_analytics(
             "female_positive": gender["Female"]["Positive"],
             "female_neutral":  gender["Female"]["Neutral"],
             "female_negative": gender["Female"]["Negative"],
+            "other_positive":  gender["Other"]["Positive"],
+            "other_neutral":   gender["Other"]["Neutral"],
+            "other_negative":  gender["Other"]["Negative"],
         },
         "age_groups": {
             "18_25":   age_groups["18-25"],
@@ -92,6 +99,10 @@ def get_analytics(
             "40_plus": age_groups["40+"],
             "unknown": age_groups["Unknown"],
         },
+        "comment_trend": [
+            {"date": date, **counts}
+            for date, counts in sorted(comment_trend.items())
+        ],
         "total_comments": len(rows),
         "total_likes": total_likes,
     }
