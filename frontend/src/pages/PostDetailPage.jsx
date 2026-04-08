@@ -8,22 +8,32 @@ import CommentSection from '../components/CommentSection'
 const PLACEHOLDER = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&auto=format&fit=crop&q=60'
 
 function renderInlineFormatting(text, keyPrefix) {
-  const parts = text.split(/(\*\*.*?\*\*|__.*?__|_.*?_)/g)
+  // Order matters: __ before _ to avoid single-underscore eating double
+  const parts = text.split(/(\*\*__.*?__\*\*|__\*\*.*?\*\*__|\*\*_.*?_\*\*|_\*\*.*?\*\*_|\*\*.*?\*\*|__.*?__|_.*?_)/g)
 
   return parts.filter(Boolean).map((part, index) => {
+    const key = `${keyPrefix}-${index}`
+
+    // Bold + Underline: **__text__** or __**text**__
+    if ((part.startsWith('**__') && part.endsWith('__**')) || (part.startsWith('__**') && part.endsWith('**__'))) {
+      const inner = part.slice(4, -4)
+      return <strong key={key}><u>{inner}</u></strong>
+    }
+    // Bold + Italic: **_text_** or _**text**_
+    if ((part.startsWith('**_') && part.endsWith('_**')) || (part.startsWith('_**') && part.endsWith('**_'))) {
+      const inner = part.slice(3, -3)
+      return <strong key={key}><em>{inner}</em></strong>
+    }
     if (part.startsWith('**') && part.endsWith('**')) {
-      return <strong key={`${keyPrefix}-bold-${index}`}>{part.slice(2, -2)}</strong>
+      return <strong key={key}>{part.slice(2, -2)}</strong>
     }
-
     if (part.startsWith('__') && part.endsWith('__')) {
-      return <u key={`${keyPrefix}-underline-${index}`}>{part.slice(2, -2)}</u>
+      return <u key={key}>{part.slice(2, -2)}</u>
     }
-
     if (part.startsWith('_') && part.endsWith('_')) {
-      return <em key={`${keyPrefix}-italic-${index}`}>{part.slice(1, -1)}</em>
+      return <em key={key}>{part.slice(1, -1)}</em>
     }
-
-    return <React.Fragment key={`${keyPrefix}-text-${index}`}>{part}</React.Fragment>
+    return <React.Fragment key={key}>{part}</React.Fragment>
   })
 }
 
@@ -132,10 +142,13 @@ function PostDetailPage() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-gray-950/80 via-gray-950/20 to-transparent" />
         {post.beneficial_for && (
-          <span className="absolute bottom-4 left-4 max-w-[calc(100%-2rem)] whitespace-pre-line px-3 py-1.5 rounded-xl bg-blue-600/90 text-sm font-semibold text-white backdrop-blur-sm">
-            People who benefit:
-            {'\n'}
-            {post.beneficial_for}
+          <span className="absolute bottom-4 left-4 max-w-[calc(100%-2rem)] px-3 py-1.5 rounded-xl bg-blue-600/90 text-sm font-semibold text-white backdrop-blur-sm">
+            <span className="block mb-0.5">People who benefit:</span>
+            <ul className="list-disc pl-4 space-y-0.5 font-normal">
+              {post.beneficial_for.split('\n').filter(Boolean).map((line, i) => (
+                <li key={i}>{line.startsWith('- ') ? line.slice(2) : line}</li>
+              ))}
+            </ul>
           </span>
         )}
       </div>
@@ -176,9 +189,14 @@ function PostDetailPage() {
           Share
         </button>
         {user?.role === 'admin' && (
-          <Link to={`/admin/analytics/${post.post_id}`} className="btn-primary text-sm py-2.5 px-5 ml-auto">
-            View Analytics
-          </Link>
+          <div className="flex gap-2 ml-auto">
+            <Link to={`/admin/edit-post/${post.post_id}`} className="btn-secondary text-sm py-2.5 px-5">
+              Edit Scheme
+            </Link>
+            <Link to={`/admin/analytics/${post.post_id}`} className="btn-primary text-sm py-2.5 px-5">
+              View Analytics
+            </Link>
+          </div>
         )}
       </div>
 

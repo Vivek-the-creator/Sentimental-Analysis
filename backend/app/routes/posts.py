@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.models.models import Post, Like, Comment, User
-from app.schemas.schemas import PostCreate
+from app.schemas.schemas import PostCreate, PostUpdate
 from app.services.auth_service import get_current_user, get_admin_user
 
 router = APIRouter(prefix="/api", tags=["Posts"])
@@ -64,6 +64,23 @@ def create_post(
         created_by=current_user.user_id,
     )
     db.add(post)
+    db.commit()
+    db.refresh(post)
+    return _post_to_dict(post, db)
+
+
+@router.put("/posts/{post_id}")
+def update_post(
+    post_id: int,
+    post_data: PostUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user),
+):
+    post = db.query(Post).filter(Post.post_id == post_id).first()
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    for field, value in post_data.model_dump(exclude_unset=True).items():
+        setattr(post, field, value)
     db.commit()
     db.refresh(post)
     return _post_to_dict(post, db)

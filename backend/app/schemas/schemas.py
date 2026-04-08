@@ -45,6 +45,14 @@ class PostCreate(BaseModel):
     detailed_description: Optional[str] = None
 
 
+class PostUpdate(BaseModel):
+    title: Optional[str] = None
+    thumbnail: Optional[str] = None
+    beneficial_for: Optional[str] = None
+    short_description: Optional[str] = None
+    detailed_description: Optional[str] = None
+
+
 class PostResponse(BaseModel):
     post_id: int
     title: str

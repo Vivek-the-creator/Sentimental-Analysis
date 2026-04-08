@@ -108,7 +108,7 @@ function AdminDashboard() {
                     <span>{date(post.created_at)}</span>
                     <span>❤️ {post.like_count}</span>
                     <span>💬 {post.comment_count}</span>
-                    {post.beneficial_for && <span className="max-w-52 whitespace-pre-line rounded bg-blue-600/20 px-1.5 py-0.5 text-blue-400 line-clamp-2">{post.beneficial_for}</span>}
+                    {post.beneficial_for && <span className="max-w-52 rounded bg-blue-600/20 px-1.5 py-0.5 text-blue-400 line-clamp-2">{post.beneficial_for.split('\n').filter(Boolean).map(l => l.startsWith('- ') ? l.slice(2) : l).join(', ')}</span>}
                   </div>
                 </div>
 
@@ -119,6 +119,12 @@ function AdminDashboard() {
                     className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white text-xs transition-all"
                   >
                     View
+                  </Link>
+                  <Link
+                    to={`/admin/edit-post/${post.post_id}`}
+                    className="px-3 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 text-xs transition-all"
+                  >
+                    Edit
                   </Link>
                   <Link
                     to={`/admin/analytics/${post.post_id}`}

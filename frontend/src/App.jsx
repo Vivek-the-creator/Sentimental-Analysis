@@ -43,6 +43,22 @@ function App() {
               }
             />
             <Route
+              path="/admin/edit-post/:id"
+              element={
+                <ProtectedRoute adminOnly>
+                  <CreatePost />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/edit-post/:id"
+              element={
+                <ProtectedRoute adminOnly>
+                  <CreatePost />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/admin/analytics/:id"
               element={
                 <ProtectedRoute adminOnly>

@@ -1,5 +1,5 @@
-import React, { useRef, useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import React, { useRef, useState, useEffect } from 'react'
+import { useNavigate, useParams, Link } from 'react-router-dom'
 import { postsAPI } from '../../services/api'
 
 const DESCRIPTION_TOOLS = [
@@ -11,6 +11,8 @@ const DESCRIPTION_TOOLS = [
 
 function CreatePost() {
   const navigate = useNavigate()
+  const { id } = useParams()
+  const isEdit = Boolean(id)
   const descriptionRef = useRef(null)
   const [form, setForm] = useState({
     title: '',
@@ -20,31 +22,77 @@ function CreatePost() {
     detailed_description: '',
   })
   const [loading, setLoading] = useState(false)
+  const [fetching, setFetching] = useState(isEdit)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+
+  useEffect(() => {
+    if (!isEdit) return
+    postsAPI.getById(id)
+      .then((res) => {
+        const { title, thumbnail, beneficial_for, short_description, detailed_description } = res.data
+        setForm({
+          title: title || '',
+          thumbnail: thumbnail || '',
+          beneficial_for: beneficial_for || '',
+          short_description: short_description || '',
+          detailed_description: detailed_description || '',
+        })
+      })
+      .catch(() => setError('Failed to load scheme data'))
+      .finally(() => setFetching(false))
+  }, [id, isEdit])
 
   const isFormComplete = Object.values(form).every((value) => value.trim())
 
   const handleChange = (e) => {
     const { name, value } = e.target
-
     setError('')
     setForm((currentForm) => ({ ...currentForm, [name]: value }))
   }
 
+  const handleBeneficialKeyDown = (e) => {
+    if (e.key !== 'Enter') return
+    e.preventDefault()
+    const textarea = e.target
+    const value = form.beneficial_for
+    const pos = textarea.selectionStart
+
+    const lineStart = value.lastIndexOf('\n', pos - 1) + 1
+    const currentLine = value.slice(lineStart, pos)
+
+    // Empty bullet line → strip bullet, just newline
+    if (currentLine === '- ') {
+      const next = value.slice(0, lineStart) + '\n' + value.slice(pos)
+      setForm((f) => ({ ...f, beneficial_for: next }))
+      requestAnimationFrame(() => textarea.setSelectionRange(lineStart + 1, lineStart + 1))
+      return
+    }
+
+    // If current line has no bullet yet, prefix it first
+    let updatedValue = value
+    let updatedPos = pos
+    if (currentLine.length > 0 && !currentLine.startsWith('- ')) {
+      updatedValue = value.slice(0, lineStart) + '- ' + value.slice(lineStart)
+      updatedPos = pos + 2
+    }
+
+    const insertion = '\n- '
+    const next = updatedValue.slice(0, updatedPos) + insertion + updatedValue.slice(updatedPos)
+    const nextPos = updatedPos + insertion.length
+    setForm((f) => ({ ...f, beneficial_for: next }))
+    requestAnimationFrame(() => textarea.setSelectionRange(nextPos, nextPos))
+  }
+
   const handleThumbnailFileChange = (e) => {
     const file = e.target.files?.[0]
-
     if (!file) return
-
     if (!file.type.startsWith('image/')) {
       setError('Please choose a valid image file for the thumbnail')
       e.target.value = ''
       return
     }
-
     const reader = new FileReader()
-
     reader.onload = () => {
       setError('')
       setForm((currentForm) => ({
@@ -52,24 +100,17 @@ function CreatePost() {
         thumbnail: typeof reader.result === 'string' ? reader.result : '',
       }))
     }
-
-    reader.onerror = () => {
-      setError('Failed to read the selected thumbnail image')
-    }
-
+    reader.onerror = () => setError('Failed to read the selected thumbnail image')
     reader.readAsDataURL(file)
   }
 
   const applyDescriptionFormat = (tool) => {
     const textarea = descriptionRef.current
-
     if (!textarea) return
-
     const value = form.detailed_description
     const selectionStart = textarea.selectionStart ?? 0
     const selectionEnd = textarea.selectionEnd ?? 0
     const selectedText = value.slice(selectionStart, selectionEnd)
-
     let nextValue = value
     let nextSelectionStart = selectionStart
     let nextSelectionEnd = selectionEnd
@@ -77,7 +118,6 @@ function CreatePost() {
     if (tool.type === 'wrap') {
       const insertion = `${tool.prefix}${selectedText || tool.placeholder}${tool.suffix}`
       nextValue = `${value.slice(0, selectionStart)}${insertion}${value.slice(selectionEnd)}`
-
       if (selectedText) {
         nextSelectionStart = selectionStart + tool.prefix.length
         nextSelectionEnd = nextSelectionStart + selectedText.length
@@ -95,17 +135,12 @@ function CreatePost() {
       const lines = selectedBlock.split('\n')
       const prefixedLines = lines.map((line) => (line.startsWith(tool.prefix) ? line : `${tool.prefix}${line}`))
       const insertion = prefixedLines.join('\n')
-
       nextValue = `${value.slice(0, start)}${insertion}${value.slice(end)}`
       nextSelectionStart = start
       nextSelectionEnd = start + insertion.length
     }
 
-    setForm((currentForm) => ({
-      ...currentForm,
-      detailed_description: nextValue,
-    }))
-
+    setForm((currentForm) => ({ ...currentForm, detailed_description: nextValue }))
     requestAnimationFrame(() => {
       textarea.focus()
       textarea.setSelectionRange(nextSelectionStart, nextSelectionEnd)
@@ -114,24 +149,33 @@ function CreatePost() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-
     if (!isFormComplete) {
       setError('Please fill in all fields before publishing the scheme')
       return
     }
-
     setError('')
     setLoading(true)
-
     try {
-      await postsAPI.create(form)
+      if (isEdit) {
+        await postsAPI.update(id, form)
+      } else {
+        await postsAPI.create(form)
+      }
       setSuccess(true)
       setTimeout(() => navigate('/admin'), 1500)
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to create scheme post')
+      setError(err.response?.data?.detail || `Failed to ${isEdit ? 'update' : 'create'} scheme post`)
     } finally {
       setLoading(false)
     }
+  }
+
+  if (fetching) {
+    return (
+      <main className="page-container animate-fade-in max-w-3xl flex justify-center py-20">
+        <div className="spinner w-8 h-8" />
+      </main>
+    )
   }
 
   return (
@@ -144,8 +188,10 @@ function CreatePost() {
       </Link>
 
       <div className="mb-8">
-        <h1 className="text-3xl font-extrabold text-white">Create New Scheme</h1>
-        <p className="text-gray-400 mt-1 text-sm">Fill in the details below to publish a government scheme post</p>
+        <h1 className="text-3xl font-extrabold text-white">{isEdit ? 'Edit Scheme' : 'Create New Scheme'}</h1>
+        <p className="text-gray-400 mt-1 text-sm">
+          {isEdit ? 'Update the details below to modify this scheme' : 'Fill in the details below to publish a government scheme post'}
+        </p>
       </div>
 
       <div className="glass-card p-8">
@@ -156,7 +202,7 @@ function CreatePost() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-white mb-1">Scheme Published!</h3>
+            <h3 className="text-xl font-bold text-white mb-1">{isEdit ? 'Scheme Updated!' : 'Scheme Published!'}</h3>
             <p className="text-gray-400 text-sm">Redirecting to dashboard...</p>
           </div>
         ) : (
@@ -215,12 +261,13 @@ function CreatePost() {
                 name="beneficial_for"
                 value={form.beneficial_for}
                 onChange={handleChange}
+                onKeyDown={handleBeneficialKeyDown}
                 required
                 rows={4}
                 placeholder={`Examples:\n- Farmers\n- Women entrepreneurs\n- Senior citizens`}
                 className="input-field resize-y"
               />
-              <p className="text-xs text-gray-500 mt-2">Use bullet points or press Enter to move to the next line.</p>
+              <p className="text-xs text-gray-500 mt-2">Press Enter to automatically add bullet points for each line.</p>
             </div>
 
             <div>
@@ -239,18 +286,7 @@ function CreatePost() {
 
             <div>
               <label className="input-label">Detailed Description *</label>
-              <textarea
-                ref={descriptionRef}
-                id="post-detailed-desc"
-                name="detailed_description"
-                value={form.detailed_description}
-                onChange={handleChange}
-                rows={8}
-                required
-                placeholder="Full details of the scheme - eligibility, benefits, how to apply, etc."
-                className="input-field resize-y"
-              />
-              <div className="mt-3 flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 mb-2">
                 {DESCRIPTION_TOOLS.map((tool) => (
                   <button
                     key={tool.title}
@@ -263,6 +299,17 @@ function CreatePost() {
                   </button>
                 ))}
               </div>
+              <textarea
+                ref={descriptionRef}
+                id="post-detailed-desc"
+                name="detailed_description"
+                value={form.detailed_description}
+                onChange={handleChange}
+                rows={8}
+                required
+                placeholder="Full details of the scheme - eligibility, benefits, how to apply, etc."
+                className="input-field resize-y"
+              />
               <p className="text-xs text-gray-500 mt-2">Select text, then use the tools for bold, italic, underline, or bullet points.</p>
             </div>
 
@@ -283,7 +330,9 @@ function CreatePost() {
                 disabled={loading || !isFormComplete}
                 className="btn-primary flex-1 justify-center disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? <><span className="spinner w-4 h-4" /> Publishing...</> : 'Publish Scheme'}
+                {loading
+                  ? <><span className="spinner w-4 h-4" /> {isEdit ? 'Saving...' : 'Publishing...'}</>
+                  : isEdit ? 'Save Changes' : 'Publish Scheme'}
               </button>
             </div>
           </form>
