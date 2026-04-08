@@ -96,18 +96,6 @@ Tables are created automatically by SQLAlchemy on backend startup.
 
 ---
 
-## ⚙️ Environment Variables (`backend/.env`)
-
-```env
-DATABASE_URL=mysql+pymysql://root:Vivek%402006@localhost:3306/govsentinel
-SECRET_KEY=govsentinel-super-secret-jwt-key-2024-xyz
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=1440
-MODEL_PATH=C:/Users/Vivek/OneDrive/Desktop/sentiment_project/models/bert_model/bert_final_model
-```
-
----
-
 ## 🚀 Running the Application
 
 ### Backend
