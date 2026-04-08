@@ -41,6 +41,25 @@ def get_posts(
     }
 
 
+@router.get("/posts/mine")
+def get_my_posts(
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1, le=50),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user),
+):
+    offset = (page - 1) * limit
+    q = db.query(Post).filter(Post.created_by == current_user.user_id)
+    total = q.count()
+    posts = q.order_by(Post.created_at.desc()).offset(offset).limit(limit).all()
+    return {
+        "posts": [_post_to_dict(p, db) for p in posts],
+        "total": total,
+        "page": page,
+        "pages": max(1, (total + limit - 1) // limit),
+    }
+
+
 @router.get("/posts/{post_id}")
 def get_post(post_id: int, db: Session = Depends(get_db)):
     post = db.query(Post).filter(Post.post_id == post_id).first()

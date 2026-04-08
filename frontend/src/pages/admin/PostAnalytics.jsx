@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { analyticsAPI, postsAPI } from '../../services/api'
 import SentimentPieChart from '../../components/charts/SentimentPieChart'
@@ -7,6 +7,8 @@ import GenderAnalysis from '../../components/charts/GenderAnalysis'
 import AgeGroupAnalysis from '../../components/charts/AgeGroupAnalysis'
 import SentimentTrendChart from '../../components/charts/SentimentTrendChart'
 import WordCloudChart from '../../components/charts/WordCloudChart'
+import html2canvas from 'html2canvas'
+import jsPDF from 'jspdf'
 
 function ChartCard({ title, children, className = '' }) {
   return (
@@ -24,6 +26,34 @@ function PostAnalytics() {
   const [words, setWords] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [downloading, setDownloading] = useState(false)
+  const reportRef = useRef(null)
+
+  const handleDownloadPDF = async () => {
+    setDownloading(true)
+    try {
+      const canvas = await html2canvas(reportRef.current, {
+        scale: 2,
+        backgroundColor: '#020617',
+        useCORS: true,
+        logging: false,
+      })
+      const imgData = canvas.toDataURL('image/png')
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+      const pageW = pdf.internal.pageSize.getWidth()
+      const pageH = pdf.internal.pageSize.getHeight()
+      const imgH = (canvas.height * pageW) / canvas.width
+      let y = 0
+      while (y < imgH) {
+        if (y > 0) pdf.addPage()
+        pdf.addImage(imgData, 'PNG', 0, -y, pageW, imgH)
+        y += pageH
+      }
+      pdf.save(`analytics-${post?.title?.replace(/\s+/g, '-') || id}.pdf`)
+    } finally {
+      setDownloading(false)
+    }
+  }
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -75,12 +105,29 @@ function PostAnalytics() {
 
   return (
     <main className="page-container animate-fade-in">
-      <Link to="/admin" className="flex items-center gap-2 text-gray-400 hover:text-white text-sm mb-6 transition-colors group">
-        <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
-        Back to Dashboard
-      </Link>
+      <div className="flex items-center justify-between mb-6">
+        <Link to="/admin" className="flex items-center gap-2 text-gray-400 hover:text-white text-sm transition-colors group">
+          <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to Dashboard
+        </Link>
+        <button
+          onClick={handleDownloadPDF}
+          disabled={downloading}
+          className="btn-primary"
+        >
+          {downloading ? (
+            <><div className="spinner w-4 h-4" /> Generating…</>
+          ) : (
+            <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
+            </svg> Download Report</>
+          )}
+        </button>
+      </div>
+
+      <div ref={reportRef}>
 
       <div className="mb-8">
         <span className="text-xs font-semibold text-blue-400 uppercase tracking-wide">Analytics Report</span>
@@ -123,6 +170,7 @@ function PostAnalytics() {
         <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-2">Word Cloud</h3>
         <p className="text-xs text-gray-600 mb-4">Click any word to see its frequency in comments</p>
         <WordCloudChart words={words} />
+      </div>
       </div>
     </main>
   )

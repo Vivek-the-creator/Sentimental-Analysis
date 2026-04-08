@@ -33,6 +33,7 @@ export const authAPI = {
 
 export const postsAPI = {
   getAll:  (page = 1, limit = 9) => api.get(`/api/posts?page=${page}&limit=${limit}`),
+  getMine: (page = 1, limit = 10) => api.get(`/api/posts/mine?page=${page}&limit=${limit}`),
   getById: (id)                   => api.get(`/api/posts/${id}`),
   create:  (data)                 => api.post('/api/posts', data),
   update:  (id, data)             => api.put(`/api/posts/${id}`, data),

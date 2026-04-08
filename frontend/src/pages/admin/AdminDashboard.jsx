@@ -15,7 +15,7 @@ function AdminDashboard() {
   const fetchPosts = async () => {
     setLoading(true)
     try {
-      const res = await postsAPI.getAll(page, 10)
+      const res = await postsAPI.getMine(page, 10)
       setPosts(res.data.posts)
       setPages(res.data.pages)
       setTotal(res.data.total)
@@ -58,7 +58,7 @@ function AdminDashboard() {
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
         {[
-          { label: 'Total Schemes', value: total, icon: '📋', color: 'from-blue-600 to-blue-700' },
+          { label: 'My Schemes',    value: total, icon: '📋', color: 'from-blue-600 to-blue-700' },
           { label: 'AI Powered',    value: '✓',   icon: '🤖', color: 'from-purple-600 to-purple-700' },
           { label: 'Live Sentiments',value: '24/7',icon: '📊', color: 'from-emerald-600 to-emerald-700' },
           { label: 'Platform',      value: 'v1.0', icon: '🚀', color: 'from-amber-600 to-amber-700' },
@@ -76,7 +76,7 @@ function AdminDashboard() {
       {/* Posts Table */}
       <div className="glass-card overflow-hidden">
         <div className="p-5 border-b border-white/8">
-          <h2 className="text-lg font-semibold text-white">All Schemes</h2>
+          <h2 className="text-lg font-semibold text-white">My Schemes</h2>
         </div>
 
         {loading ? (
@@ -84,7 +84,7 @@ function AdminDashboard() {
         ) : posts.length === 0 ? (
           <div className="text-center py-16 text-gray-500">
             <div className="text-4xl mb-3">📭</div>
-            <p>No schemes yet.</p>
+            <p>You haven't created any schemes yet.</p>
             <Link to="/admin/create-post" className="btn-primary mt-4 inline-flex">Create First Scheme</Link>
           </div>
         ) : (
