@@ -12,15 +12,57 @@ function CreatePost() {
     detailed_description: '',
   })
   const [loading, setLoading] = useState(false)
-  const [error,   setError]   = useState('')
+  const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
+  const isFormComplete = Object.values(form).every((value) => value.trim())
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+
+    setError('')
+    setForm((currentForm) => ({ ...currentForm, [name]: value }))
+  }
+
+  const handleThumbnailFileChange = (e) => {
+    const file = e.target.files?.[0]
+
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      setError('Please choose a valid image file for the thumbnail')
+      e.target.value = ''
+      return
+    }
+
+    const reader = new FileReader()
+
+    reader.onload = () => {
+      setError('')
+      setForm((currentForm) => ({
+        ...currentForm,
+        thumbnail: typeof reader.result === 'string' ? reader.result : '',
+      }))
+    }
+
+    reader.onerror = () => {
+      setError('Failed to read the selected thumbnail image')
+    }
+
+    reader.readAsDataURL(file)
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    if (!isFormComplete) {
+      setError('Please fill in all fields before publishing the scheme')
+      return
+    }
+
     setError('')
     setLoading(true)
+
     try {
       await postsAPI.create(form)
       setSuccess(true)
@@ -34,7 +76,6 @@ function CreatePost() {
 
   return (
     <main className="page-container animate-fade-in max-w-3xl">
-      {/* Back */}
       <Link to="/admin" className="flex items-center gap-2 text-gray-400 hover:text-white text-sm mb-6 transition-colors group">
         <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -56,11 +97,10 @@ function CreatePost() {
               </svg>
             </div>
             <h3 className="text-xl font-bold text-white mb-1">Scheme Published!</h3>
-            <p className="text-gray-400 text-sm">Redirecting to dashboard…</p>
+            <p className="text-gray-400 text-sm">Redirecting to dashboard...</p>
           </div>
         ) : (
           <form id="create-post-form" onSubmit={handleSubmit} className="space-y-6">
-            {/* Title */}
             <div>
               <label className="input-label">Scheme Title *</label>
               <input
@@ -74,61 +114,77 @@ function CreatePost() {
               />
             </div>
 
-            {/* Thumbnail URL */}
             <div>
-              <label className="input-label">Thumbnail Image URL</label>
+              <label className="input-label">Thumbnail Image *</label>
               <input
                 id="post-thumbnail"
                 name="thumbnail"
                 value={form.thumbnail}
                 onChange={handleChange}
-                placeholder="https://example.com/image.jpg"
+                required
+                placeholder="Paste an image URL here"
                 className="input-field"
+              />
+              <p className="text-xs text-gray-500 mt-2">Paste an image link or browse for an image from this device.</p>
+              <label htmlFor="post-thumbnail-file" className="btn-secondary mt-3 inline-flex cursor-pointer">
+                Browse Device
+              </label>
+              <input
+                id="post-thumbnail-file"
+                type="file"
+                accept="image/*"
+                onChange={handleThumbnailFileChange}
+                className="hidden"
               />
               {form.thumbnail && (
                 <div className="mt-2 h-32 rounded-xl overflow-hidden border border-white/10">
-                  <img src={form.thumbnail} alt="Preview" className="w-full h-full object-cover" onError={(e)=>{e.target.style.display='none'}} />
+                  <img
+                    src={form.thumbnail}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                    onError={(e) => { e.target.style.display = 'none' }}
+                  />
                 </div>
               )}
             </div>
 
-            {/* Beneficial For */}
             <div>
-              <label className="input-label">Beneficial For</label>
+              <label className="input-label">Beneficial For *</label>
               <input
                 id="post-beneficial"
                 name="beneficial_for"
                 value={form.beneficial_for}
                 onChange={handleChange}
+                required
                 placeholder="e.g. Farmers, Youth, Women, Senior Citizens"
                 className="input-field"
               />
             </div>
 
-            {/* Short Description */}
             <div>
-              <label className="input-label">Short Description</label>
+              <label className="input-label">Short Description *</label>
               <textarea
                 id="post-short-desc"
                 name="short_description"
                 value={form.short_description}
                 onChange={handleChange}
                 rows={2}
-                placeholder="Brief summary shown on the scheme card (1–2 sentences)"
+                required
+                placeholder="Brief summary shown on the scheme card (1-2 sentences)"
                 className="input-field resize-none"
               />
             </div>
 
-            {/* Detailed Description */}
             <div>
-              <label className="input-label">Detailed Description</label>
+              <label className="input-label">Detailed Description *</label>
               <textarea
                 id="post-detailed-desc"
                 name="detailed_description"
                 value={form.detailed_description}
                 onChange={handleChange}
                 rows={8}
-                placeholder="Full details of the scheme — eligibility, benefits, how to apply, etc."
+                required
+                placeholder="Full details of the scheme - eligibility, benefits, how to apply, etc."
                 className="input-field resize-y"
               />
             </div>
@@ -147,10 +203,10 @@ function CreatePost() {
               <button
                 id="publish-post-btn"
                 type="submit"
-                disabled={loading}
-                className="btn-primary flex-1 justify-center"
+                disabled={loading || !isFormComplete}
+                className="btn-primary flex-1 justify-center disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? <><span className="spinner w-4 h-4" /> Publishing…</> : '🚀 Publish Scheme'}
+                {loading ? <><span className="spinner w-4 h-4" /> Publishing...</> : 'Publish Scheme'}
               </button>
             </div>
           </form>

@@ -16,6 +16,8 @@ function SentimentBarChart({ data }) {
         <YAxis tick={{ fill: '#9ca3af', fontSize: 12 }} axisLine={false} tickLine={false} allowDecimals={false} />
         <Tooltip
           contentStyle={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff' }}
+          itemStyle={{ color: '#fff' }}
+          labelStyle={{ color: '#fff' }}
           cursor={{ fill: 'rgba(255,255,255,0.03)' }}
           formatter={(v) => [v, 'Comments']}
         />
