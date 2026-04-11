@@ -1,7 +1,9 @@
 import axios from 'axios'
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
 const api = axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL: API_URL,
   headers: { 'Content-Type': 'application/json' },
 })
 
@@ -61,4 +63,5 @@ export const mlAPI = {
   predict: (text) => api.post('/api/predict', { text }),
 }
 
+export { API_URL }
 export default api

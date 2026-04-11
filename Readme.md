@@ -118,6 +118,70 @@ npm run dev
 
 Open: http://localhost:5173
 
+Create `frontend/.env`:
+
+```bash
+VITE_API_URL=https://xxxx.ngrok-free.app
+```
+
+The frontend API client reads `import.meta.env.VITE_API_URL`, so your friend only needs the frontend running locally while your backend stays on your machine behind ngrok.
+
+### Frontend With Remote Backend (Friend's Laptop)
+
+1. Start your backend locally on port `8000`.
+2. Expose it from your machine:
+
+```bash
+ngrok http 8000
+```
+
+3. Share the ngrok URL and have your friend create `frontend/.env` with:
+
+```bash
+VITE_API_URL=https://xxxx.ngrok-free.app
+```
+
+4. On your friend's laptop:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+5. They open `http://localhost:5173` and the React app will call:
+   - `${VITE_API_URL}/api/register`
+   - `${VITE_API_URL}/api/login`
+   - `${VITE_API_URL}/api/posts`
+   - and the rest of the `/api/...` endpoints the same way.
+
+### Single Ngrok Link (Optional)
+
+Build the frontend:
+
+```bash
+cd frontend
+npm install
+npm run build
+```
+
+Then start the backend on port `8000` as usual:
+
+```bash
+cd backend
+uvicorn app.main:app --reload --port 8000
+```
+
+If `frontend/dist` exists, FastAPI now serves the built React app from `/`, so a single command:
+
+```bash
+ngrok http 8000
+```
+
+will expose both:
+- frontend at `https://xxxx.ngrok-free.app/`
+- backend API at `https://xxxx.ngrok-free.app/api/...`
+
 ---
 
 ## 🔌 API Endpoints
