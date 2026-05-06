@@ -1,4 +1,4 @@
-# 🏛️ GovSentinel — AI-Powered Government E-Consultation Sentiment Platform
+# 🏛️ GOVSENTINEL – AI POWERED SENTIMENT ANALYSIS OF COMMENTS RECEIVED THROUGH E-CONSULTATION MODULE 
 
 > A full-stack, production-ready platform where citizens interact with government schemes and administrators analyse public sentiment using a pre-trained Multilingual BERT model.
 
